@@ -1,0 +1,71 @@
+---
+general:
+  commands:
+    new-session: None
+    attach: None
+    resizew:
+      x: None
+      y: None
+    select-layout: [main-vertical, main-horizontal]
+    send-keys: Enter
+    pipe-pane: None
+    resizep:
+      x: None
+      y: None
+    split-window: None
+sessions:
+  - session-name-example:
+      attach: True # Attach the session at the end of the script
+      kill-session: False # Create a new session if a previous one exists with the same name
+      kill-window: True # Kill other windows or not if kill-session is 'False'
+      windows:
+        - example:
+            kill-window: True
+            select-layout: main-vertical
+            variables:
+              command: ping
+              limit: 100
+              pid:
+              user:
+                bash: whoami
+              hostname:
+                bash: echo "${HOSTNAME}"
+            panes:
+              - ping:
+                  commands:
+                    - send-keys:
+                        - clear && sudo -u @v:user @v:command 127.0.0.1:
+                            pre-commands:
+                              - pipe-pane: cat >/tmp/output.tmp
+                            post-commands:
+                              - pipe-pane: ""
+                              - bash:
+                                  pid: sleep 1 && pgrep @v:command
+                    - resizep:
+                        x: 50%
+              - cowsay:
+                  commands:
+                    - send-keys: cowsay "This is obviously @v:hostname"
+              - htop:
+                  commands:
+                    - send-keys: htop
+                    - resizep:
+                        y: 25
+              - cpulimit:
+                  commands:
+                    - send-keys: clear && sudo -u @v:user cpulimit -l @v:limit -p @v:pid
+              - bash:
+                  commands:
+                    - send-keys: clear
+        - journalctl:
+            kill-window: False
+            select-layout: main-vertical
+            panes:
+              - journalctl:
+                  commands:
+                    - send-keys: clear && journalctl -ef -t sshd
+                    - resizep:
+                        x: 50%
+              - fail2ban:
+                  commands:
+                    - send-keys: watch sudo fail2ban-client status sshd
